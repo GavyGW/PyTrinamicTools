@@ -1,4 +1,6 @@
 '''
+This file provides the MicroStepTable class for using the microstep table encoding
+
 Created: 18.07.2019
 
 @author: LH
@@ -9,6 +11,16 @@ import math
 from PyTrinamic.helpers import TMC_helpers
 
 class MicroStepTable():
+    '''
+    This class holds the values for one microstep table.
+
+    The table may be initialized either with already encoded registers or with a
+    sine waveform using the factory methods decodeRegisters() and
+    encodeWaveform() respectively.
+
+    Once the table is initialized it can be printed out or plotted with various
+    helper functions.
+    '''
     def __init__(self):
         self._initialized = False
         
@@ -253,6 +265,8 @@ if __name__ == "__main__":
     # Encode the first quarter of the sine wave to MSLUT registers
     myTable2 = MicroStepTable.encodeWaveform(myTable1.getSineWave()[0:256])
     
+    # Print the registers of both tables. Note that the encoding allows the same
+    # waveform to be encoded in multiple ways - the registers may differ.
     print("Table 1:")
     myTable1.printRegisters()
     print("Table 2:")
