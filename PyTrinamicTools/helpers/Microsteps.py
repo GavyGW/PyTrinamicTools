@@ -241,7 +241,9 @@ class MicroStepTable():
 
         plot.figure()
         plot.plot([(x[1], x[2]) for x in self._waveform])
-        plot.title("Microstep table waveform")
+        plot.title("Microstep full wave")
+        plot.xlabel("Microstep index")
+        plot.ylabel("Current step")
         plot.show(block=block)
 
     def plotQuarterWave(self, block=True):
@@ -250,7 +252,9 @@ class MicroStepTable():
 
         plot.figure()
         plot.plot([(x[1]) for x in self._waveform[0:256]])
-        plot.title("Microstep quarter sine wave")
+        plot.title("Microstep quarter wave")
+        plot.xlabel("Microstep index")
+        plot.ylabel("Current step")
         plot.show(block=block)
     
     def plotXY(self, block=True):
@@ -259,6 +263,9 @@ class MicroStepTable():
 
         plot.figure()
         plot.plot([x[1] for x in self._waveform], [x[2] for x in self._waveform])
+        plot.title("Microstep XY graph")
+        plot.xlabel("Phase A")
+        plot.ylabel("Phase B")
         plot.show(block=block)
 
 if __name__ == "__main__":
