@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 '''
-Calculate a modulated microstep table and optionally write it to a TMC5041 IC.
+Calculate a microstep table and optionally write it to a TMC5041 IC.
 
-The basis for calculating the default microstep table is a sine wave. A total of
-256 values are sampled from the first quarter wave and then encoded into the
-microstep table format. By default the sampling is done at equidistant points.
+Supported waveforms are a sine wave and a trapezoidal wave.
+A total of 256 values are sampled and then encoded into the microstep table
+format. These 256 values are mirrored in hardware to expand to a total of 1024
+values. By default the sampling is done at equidistant points.
 
-In order to compensate for low quality motors a modulation technique is used.
-The sampling points are moved, similar to a longitudal wave. The result is a
-modulation of the velocity. The strength of that modulation depends on the
+In order to compensate for low quality motors a speed modulation technique is
+used. The sampling points are moved, similar to a longitudal wave. The result is
+a modulation of the velocity. The strength of that modulation depends on the
 MODULATION_AMPLITUDE parameter.
 
-This script allows implementing your own modulation techniques easily. You can
-simply add hardcoded sampling point values or you can implement a generator to
-dynamically calculate sampling points.
+For the speed modulation you can hardcode your sampling points.
 
 Created on 22.07.2019
 
@@ -29,8 +28,8 @@ from PyTrinamicTools.helpers.Microsteps import MicroStepTable
 
 ### Parameters #################################################################
 
-### Input modulation ###
-# Type of input modulation
+### Speed modulation ###
+# Type of speed modulation
 # 0: No modulation
 # 1: longitudinal modulation
 # 2: hardcoded modulation values
@@ -77,8 +76,8 @@ MICROSTEP_TRAPEZOIDAL_GRADIENT = 1
 MICROSTEP_TRAPEZOIDAL_OFFSET   = 0
 MICROSTEP_TRAPEZOIDAL_LIMIT    = 247
 
-# Control whether the script uploads the calculated table
-UPLOAD_TABLE         = False
+# Control whether the script uploads the calculated table to the TMC5041
+UPLOAD_TABLE = False
 
 ################################################################################
 
@@ -97,7 +96,7 @@ def sineWave(amplitude, offset, sampling_points=range(0, 256)):
                 radian = (i+0.5)/1024 * 2pi
             This way an input of [0, 255] results in the first quarter sine wave.
 
-    Returns 256 sampled points of the sine wave as a list
+    Returns 256 sampled points of the sine wave as a list of integers
     '''
     if not(type(amplitude) == type(offset) == int):
         raise TypeError
@@ -136,11 +135,9 @@ def trapezoidalWave(gradient, limit, offset, sampling_points=range(0, 256)):
             be below 248 (for SpreadCycle operation).
         - sampling_points:
             An iterable (e.g. a list) holding the 256 positions where the gradient
-            will be sampled. The values are scaled with:
+            will be sampled.
 
-            This way an input of [0, 255] results in the first quarter sine wave.
-
-    Returns 256 sampled points of a trapezoidal wave as a list
+    Returns 256 sampled points of a trapezoidal waveform as a list of integers
     '''
     if not (0 < gradient <= 3):
         raise ValueError("Invalid gradient value")
@@ -167,7 +164,15 @@ def trapezoidalWave(gradient, limit, offset, sampling_points=range(0, 256)):
 
     return values
 
-### Generators #################################################################
+### Speed modulation ###########################################################
+### For modulating the speed along the waveform, values between 0 and 256 are
+### required. Unmodulated speed is represented by the values 0, 1, ... 254, 255.
+### These values represent X values in the graph of the used waveform. The
+### resulting Y values are then encoded as microsteps.
+###
+### This implementation uses python generator expressions to represent the 256
+### needed values.
+
 # Default mechanism: equidistant sampling points
 # This generator gives the values from 0 to 255, similar to range(0, 256)
 def linearGenerator():
@@ -176,7 +181,8 @@ def linearGenerator():
         yield value
         value += 1
 
-# Implementation of the equidistant sampling points as a hardcoded list
+# Implementation of hardcoded sampling points. By default the values in the
+# hardcoded list are equal to the linearGenerator() values: 0 to 255.
 def hardcodedGenerator():
     values = MODULATION_VALUES
     yield from values
