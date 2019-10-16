@@ -65,7 +65,7 @@ class MicroStepTable():
         # Find all the different sections
         minDiff = maxDiff = difference[0]
         sections = []
-        for i, val in enumerate(difference):
+        for i, val in enumerate(difference, 1):
             if val > minDiff + 1:
                 # Newest value is too high for current section
                 # -> Start a new section
