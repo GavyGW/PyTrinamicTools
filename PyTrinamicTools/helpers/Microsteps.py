@@ -275,7 +275,6 @@ if __name__ == "__main__":
     ]
     MSLUTSEL   = 0xFFFF8056
     MSLUTSTART = 0x00F70000
-    MSLUTSTART = 0x00F70000
     
     # Decode the default table
     myTable1 = MicroStepTable.decodeRegisters(MSLUT, MSLUTSEL, MSLUTSTART)
