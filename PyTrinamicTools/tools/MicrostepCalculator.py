@@ -225,10 +225,17 @@ if __name__ == "__main__":
     if MODULATION_TYPE != 0:
         # Plot the modulation curve
         plot.figure(clear=True)
-        plot.plot(sampling_points)
-        plot.plot(list(range(0, 256)), '--')
-        plot.plot(sampling_points[0::4], [0]*64, 'x')
-        plot.title("Step modulation")
+
+        plot.plot(list(range(0, 256)), '--', label='Unmodulated wave')
+        plot.plot(sampling_points, label='Sampling point modulation wave')
+        plot.plot(list(range(0, 256, 4)), [0]*64, '.', label='Unmodulated sampling points')
+        plot.plot([0]*64, sampling_points[0::4], '.', label='Modulated sampling points')
+
+        plot.title("Step speed modulation")
+        plot.legend()
+        plot.xlabel("Step index")
+        plot.ylabel("Modulated step position")
+
         plot.show(block= (table==None))
 
     # If the encoding failed, abort here
