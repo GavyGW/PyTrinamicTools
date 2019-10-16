@@ -236,18 +236,27 @@ class MicroStepTable():
         print()
     
     def plotWaveform(self, block=True):
+        if not(self._initialized):
+            raise RuntimeError("Table is not initialized")
+
         plot.figure()
         plot.plot([(x[1], x[2]) for x in self._waveform])
         plot.title("Microstep table waveform")
         plot.show(block=block)
 
     def plotQuarterWave(self, block=True):
+        if not(self._initialized):
+            raise RuntimeError("Table is not initialized")
+
         plot.figure()
         plot.plot([(x[1]) for x in self._waveform[0:256]])
         plot.title("Microstep quarter sine wave")
         plot.show(block=block)
     
     def plotXY(self, block=True):
+        if not(self._initialized):
+            raise RuntimeError("Table is not initialized")
+
         plot.figure()
         plot.plot([x[1] for x in self._waveform], [x[2] for x in self._waveform])
         plot.show(block=block)
