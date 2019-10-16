@@ -232,6 +232,7 @@ if __name__ == "__main__":
     # Display register values and plots of the waveforms
     table.printRegisters()
     table.plotQuarterWave(block=False)
+    table.plotXY(block=False)
     table.plotWaveform(block=True)
 
     if not(UPLOAD_TABLE):
