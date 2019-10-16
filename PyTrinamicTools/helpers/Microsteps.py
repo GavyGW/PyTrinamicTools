@@ -69,14 +69,20 @@ class MicroStepTable():
             if val > minDiff + 1:
                 # Newest value is too high for current section
                 # -> Start a new section
-                sections = sections + [(i, minDiff)]
+                if abs(minDiff) < abs(maxDiff):
+                    sections = sections + [(i, minDiff)]
+                else:
+                    sections = sections + [(i, maxDiff-1)]
                 
                 minDiff = maxDiff = val
                 
             if val < maxDiff - 1:
                 # Newest value is too low for current section
                 # -> Start a new section
-                sections = sections + [(i, minDiff)]
+                if abs(minDiff) < abs(maxDiff):
+                    sections = sections + [(i, minDiff)]
+                else:
+                    sections = sections + [(i, maxDiff-1)]
                 
                 minDiff = maxDiff = val
     
@@ -85,7 +91,10 @@ class MicroStepTable():
             minDiff = min(minDiff, val)
     
         # Add the final section
-        sections = sections + [(i, minDiff)]
+        if abs(minDiff) < abs(maxDiff):
+            sections = sections + [(i, minDiff)]
+        else:
+            sections = sections + [(i, maxDiff-1)]
 
         # Encoding check: Only 4 sections are allowed
         if (len(sections) > 4):
