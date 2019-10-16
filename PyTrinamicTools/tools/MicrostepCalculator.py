@@ -62,9 +62,20 @@ MODULATION_VALUES = [
     240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255
     ]
 
-# Parameters for the sine waveform
+### Waveform configuration ###
+# Select the waveform type to be generated
+# 0: Sine
+# 1: Trapezoidal
+WAVEFORM_TYPE = 1
+
+# Parameters for the sine wave
 MICROSTEP_SINE_AMPLITUDE  = 248
 MICROSTEP_SINE_OFFSET     = -1
+
+# Parameters for the trapezoidal wave
+MICROSTEP_TRAPEZOIDAL_GRADIENT = 1
+MICROSTEP_TRAPEZOIDAL_OFFSET   = 0
+MICROSTEP_TRAPEZOIDAL_LIMIT    = 247
 
 # Control whether the script uploads the calculated table
 UPLOAD_TABLE         = False
@@ -107,6 +118,55 @@ def sineWave(amplitude, offset, sampling_points=range(0, 256)):
 
     return values
 
+def trapezoidalWave(gradient, limit, offset, sampling_points=range(0, 256)):
+    '''
+    Calculate the trapezoidal wave values for microstep encoding.
+
+    Arguments:
+        - gradient:
+            The gradient of the curve. Permitted values: 0 < gradient <= 3
+            If this value is not an integer, the step values will be rounded
+            for each step.
+        - offset:
+            The offset of the curve. If the offset is negative any values below
+            0 will be clipped to 0.
+        - limit:
+            The maximum value after which the gradient line stops and a
+            horizontal line continues. This value must be below 256 and should
+            be below 248 (for SpreadCycle operation).
+        - sampling_points:
+            An iterable (e.g. a list) holding the 256 positions where the gradient
+            will be sampled. The values are scaled with:
+
+            This way an input of [0, 255] results in the first quarter sine wave.
+
+    Returns 256 sampled points of a trapezoidal wave as a list
+    '''
+    if not (0 < gradient <= 3):
+        raise ValueError("Invalid gradient value")
+
+    values = []
+
+    for i in sampling_points:
+        # Calculate the desired value (not rounded yet)
+        desired_value = (i * gradient) - offset
+        # Limit the value to [0, limit]
+        desired_value = desired_value if desired_value >= 0 else 0
+        desired_value = desired_value if desired_value < limit else limit
+        # Round the value and add it to the list
+        values += [round(desired_value)]
+
+    if max(values) >= 256:
+        raise ValueError("Sampled amplitude has to be below 256")
+
+    if max(values) > 247:
+        print("Warning: The amplitude is exceeding 247. This may result in an overflow when combined with SpreadCycle")
+
+    if len(values) != 256:
+        raise ValueError("256 sampling points are required")
+
+    return values
+
 ### Generators #################################################################
 # Default mechanism: equidistant sampling points
 # This generator gives the values from 0 to 255, similar to range(0, 256)
@@ -140,14 +200,20 @@ if __name__ == "__main__":
     else:
         raise ValueError("Invalid MODULATION_TYPE selected")
 
-    # Calculate the sine wave
-    values = sineWave(MICROSTEP_SINE_AMPLITUDE, MICROSTEP_SINE_OFFSET, sampling_points)
+    if WAVEFORM_TYPE == 0:
+        # Calculate a sine wave
+        values = sineWave(MICROSTEP_SINE_AMPLITUDE, MICROSTEP_SINE_OFFSET, sampling_points)
+    elif WAVEFORM_TYPE == 1:
+        # Calculate a trapezoidal wave
+        values = trapezoidalWave(MICROSTEP_TRAPEZOIDAL_GRADIENT, MICROSTEP_TRAPEZOIDAL_LIMIT, MICROSTEP_TRAPEZOIDAL_OFFSET, sampling_points)
+    else:
+        raise ValueError("Invalid WAVEFORM_TYPE selected")
 
-    # Encode the sine wave into the microstep table format
+    # Encode the waveform into the microstep table format
     try:
         table = MicroStepTable.encodeWaveform(values)
-    except ValueError:
-        print("Specified waveform could not be encoded")
+    except ValueError as e:
+        print("Specified waveform could not be encoded: " + str(e))
         table = None
 
     if MODULATION_TYPE != 0:
