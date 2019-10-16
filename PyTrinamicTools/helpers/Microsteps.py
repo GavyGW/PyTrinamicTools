@@ -69,14 +69,14 @@ class MicroStepTable():
             if val > minDiff + 1:
                 # Newest value is too high for current section
                 # -> Start a new section
-                sections = sections + [(i, minDiff+1)]
+                sections = sections + [(i, minDiff)]
                 
                 minDiff = maxDiff = val
                 
             if val < maxDiff - 1:
                 # Newest value is too low for current section
                 # -> Start a new section
-                sections = sections + [(i, minDiff+1)]
+                sections = sections + [(i, minDiff)]
                 
                 minDiff = maxDiff = val
     
@@ -85,18 +85,18 @@ class MicroStepTable():
             minDiff = min(minDiff, val)
     
         # Add the final section
-        sections = sections + [(255, minDiff+1)]
+        sections = sections + [(i, minDiff)]
+
         # Encoding check: Only 4 sections are allowed
         if (len(sections) > 4):
             raise ValueError("More than 4 sections are required to represent this waveform")
-        
         # If less than 4 sections are required, fill the list with dummy sections
         while len(sections) < 4:
-            sections = sections + [(255, 1)]
-        
+            sections = sections + [(255, 0)]
+
         # Encoding check: Section offsets must be between -1 and 2
         for i, section in enumerate(sections):
-            if not( 0 <= section[1] <= 3 ):
+            if not( -1 <= section[1] <= 2 ):
                 raise ValueError("Waveform is too steep. (Section {0} requires an illegal base offset of {1})".format(i, section[1]))
         
         # Add a 256th dummy value to the difference list (at the start)
@@ -107,7 +107,7 @@ class MicroStepTable():
         for i, val in enumerate(difference, 1):
             for j in range(0, len(sections)):
                 if i < sections[j][0]:
-                    difference[i] -= sections[j][1] - 1
+                    difference[i] -= sections[j][1]
                     break
         
         # Sanity check: bit values should only contain zeroes and ones
@@ -125,7 +125,7 @@ class MicroStepTable():
         startCos = waveform[256]
         
         # Fill the MSLUTSEL register
-        obj._reg_MSLUTSEL = sections[2][0] << 24 | sections[1][0] << 16 | sections[0][0] << 8 | sections[3][1] << 6 | sections[2][1] << 4 | sections[1][1] << 2 | sections[0][1]
+        obj._reg_MSLUTSEL = sections[2][0] << 24 | sections[1][0] << 16 | sections[0][0] << 8 | (sections[3][1] + 1) << 6 | (sections[2][1] + 1) << 4 | (sections[1][1] + 1) << 2 | (sections[0][1] + 1)
     
         # Fill the MSLUTSTART register
         obj._reg_MSLUTSTART = startCos << 16 | startSin
