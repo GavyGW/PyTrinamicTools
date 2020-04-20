@@ -4,6 +4,7 @@ Please note that thees functions work in blocking mode.
 """
 
 import time
+import math
 
 
 class VelocityRampRunner:
@@ -28,18 +29,19 @@ class VelocityRampRunner:
         """Sub function that updates the velocity on a update_cycle_time_ms basis.
 
         Note that if time_delta_ms can not be divided by update_cycle_time_ms,
-        the linear ramp will be longer or shorter than expected.
+        the linear ramp will be longer than expected. This way we make sure there is
+        no high acceleration at the end.
         """
-        update_cycles = round(time_delta_ms / self._update_cycle_time_ms)
+        update_cycles = math.ceil(time_delta_ms / self._update_cycle_time_ms)
         acceleration = (target_velocity_rpm - start_velocity_rpm) / time_delta_ms
         for i in range(update_cycles):
             start_time = self._time_ms()
-            velocity_update = acceleration*(i*self._update_cycle_time_ms) + start_velocity_rpm
+            velocity_update = acceleration * (i * self._update_cycle_time_ms) + start_velocity_rpm
             self._velocity_update_callback(int(velocity_update))
             stop_time = self._time_ms()
             delay_time_ms = (stop_time - start_time)
             if delay_time_ms < self._update_cycle_time_ms:
-                time.sleep((self._update_cycle_time_ms-delay_time_ms)/1000)
+                time.sleep((self._update_cycle_time_ms - delay_time_ms) / 1000)
         # always set the target_velocity_rpm at the end
         self._velocity_update_callback(int(target_velocity_rpm))
 
@@ -54,7 +56,7 @@ class VelocityRampRunner:
         stop_time = self._time_ms()
         delay_time_ms = (stop_time - start_time)
         while delay_time_ms < time_delta_ms:
-            velocity_update = acceleration*delay_time_ms + start_velocity_rpm
+            velocity_update = acceleration * delay_time_ms + start_velocity_rpm
             self._velocity_update_callback(int(velocity_update))
             stop_time = self._time_ms()
             delay_time_ms = (stop_time - start_time)

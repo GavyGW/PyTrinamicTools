@@ -47,7 +47,7 @@ class TestVelocityRampRunner(unittest.TestCase):
         # call the method under test
         ramp_runner.run_linear_ramp(0, 100, 25)
 
-        expected_velocity_update_calls = [call(0), call(40), call(100)]
+        expected_velocity_update_calls = [call(0), call(40), call(80), call(100)]
         update_mock.assert_has_calls(expected_velocity_update_calls)
 
     def test_fixed_cycle_time_imprecise_35(self):
